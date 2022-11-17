@@ -143,6 +143,7 @@ macro_rules! impl_join_tuple {
 
                 if *this.len <= 0 {
                     let out = unsafe {(this.outputs as *const _ as *const ($($F::Output,)*)).read()};
+                    core::mem::forget(this.outputs);
                     Poll::Ready(out)
                 } else {
                     Poll::Pending
