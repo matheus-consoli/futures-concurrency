@@ -1,5 +1,6 @@
 use super::Join as JoinTrait;
 use crate::utils::PollArray;
+use crate::utils::Indexer;
 
 use core::fmt::{self, Debug};
 use core::future::{Future, IntoFuture};
@@ -99,6 +100,7 @@ macro_rules! impl_join_tuple {
             #[pin] futures: $mod_name::Futures<$($F,)+>,
             outputs: ($(MaybeUninit<$F::Output>,)+),
             state: PollArray<{$mod_name::LEN}>,
+            indexer: Indexer,
             completed: usize,
         }
 
@@ -129,7 +131,7 @@ macro_rules! impl_join_tuple {
 
                 let mut futures = this.futures.project();
 
-                for index in 0..LEN {
+                for index in this.indexer.iter() {
                     if this.state[index].is_consumed() {
                         continue;
                     }
@@ -167,6 +169,7 @@ macro_rules! impl_join_tuple {
                     futures: $mod_name::Futures {$($F: $F.into_future(),)+},
                     state: PollArray::new(),
                     outputs: ($(MaybeUninit::<$F::Output>::uninit(),)+),
+                    indexer: Indexer::new($mod_name::LEN),
                     completed: 0,
                 }
             }
